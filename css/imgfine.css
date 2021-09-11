@@ -1,0 +1,11 @@
+body {background-color: #f8f9fa;}
+.main-body-title {padding:3rem 0;
+    background:linear-gradient(45deg, #6838ff, #00b629, #008ee8,red);
+    background-size: 500% 500%;
+    animation: gradients 30s ease infinite;
+    color: #fff;}
+@keyframes gradients {
+    0% {background-position: 0 50%}
+    50% {background-position: 100% 50%}
+    100% {background-position: 0 50%}
+}
