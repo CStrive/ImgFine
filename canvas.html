@@ -15,7 +15,12 @@
         <button onclick="changes(2)">透明</button>
         <button onclick="changes(3)">去除红色</button>
         <button onclick="changes(4)">滤镜</button>
-        <button onclick="changes(5)">模糊</button>
+        <button onclick="changes(5)">锐化</button>
+        <button onclick="changes(6)">毛玻璃</button>
+        <button onclick="changes(7)">浮雕</button>
+        <button onclick="changes(8)">水平镜像</button>
+        <button onclick="changes(9)">底片</button>
+        <button onclick="changes(10)">马赛克</button>
     </div>
     <div style="width:1000px;">
         <canvas id="imgContainer"></canvas>
@@ -57,11 +62,11 @@
         downBtn.appendChild(triggerDown);
 
         function changes(e) {
+            var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
             if (e === 0) {
                 ctx.putImageData(dataold,0,0);
             }
             if (e === 1) {
-               var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
                var data = pixel.data;
                for (var i =0,j = data.length; i < j; i+=4) {
                    var grey = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
@@ -72,7 +77,6 @@
                ctx.putImageData(pixel,0,0);
             }
             if (e === 2) {
-                var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
                 var data = pixel.data;
                 for (var i =0,j = data.length; i < j; i+=4) {
                     data[i + 3] = 128;
@@ -80,7 +84,6 @@
                 ctx.putImageData(pixel,0,0);
             }
             if (e === 3) {
-                var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
                 var data = pixel.data;
                 for (var i =0,j = data.length; i < j; i+=4) {
                     data[i] = 0;
@@ -88,21 +91,127 @@
                 ctx.putImageData(pixel,0,0);
             }
             if (e === 4) {
-                var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
                 let kernel = [-1,-1,-1,
                     -1,8,-1,
                     -1,-1,-1];//边缘检测
                 ctx.putImageData(convolutionMatrix(ctx.createImageData(pixel),pixel,kernel),0,0);
             }
             if (e === 5) {
-                var pixel = ctx.getImageData(0,0,canvas.width,canvas.height);
                 let kernel = [1,1,1,
                     1,0.7,-1,
                     -1,-1,-1];//blur
                 ctx.putImageData(convolutionMatrix(ctx.createImageData(pixel),pixel,kernel),0,0);
             }
+            if (e === 6) {
+                var data = pixel.data;
+                var tmpdata = ctx.createImageData(canvas.width, canvas.height)
+                tmpdata.data.set(data);
+                for (let i = 0; i < canvas.width; i++) {
+                    for (let j = 0; j < canvas.height; j++) {
+                        let op = j * canvas.width + i
+                        // rand的大小决定了毛玻璃的清晰程度
+                        let rand = Math.floor(Math.random() * 10)
+                        let tp = (j + rand) * canvas.width + (i + rand)
+                        data[op * 4] = tmpdata.data[tp * 4]
+                        data[op * 4 + 1] = tmpdata.data[tp * 4 + 1]
+                        data[op * 4 + 2] = tmpdata.data[tp * 4 + 2]
+                        data[op * 4 + 3] = tmpdata.data[tp * 4 + 3]
+                    }
+                }
+                ctx.putImageData(pixel,0,0);
+            }
+            if (e === 7) {
+                var data = pixel.data;
+                var tmpdata = ctx.createImageData(canvas.width, canvas.height)
+                tmpdata.data.set(data);
+                for (var i = 0; i < canvas.width; i++) {
+                    for (var j = 0; j < canvas.height; j++) {
+                        var op = j * canvas.width + i;
+                        var tp = j * canvas.width + i + 1;
+                        var r = data[op * 4] - data[tp * 4] + 128;
+                        var g = data[op * 4 + 1] - data[tp * 4 + 1] + 128;
+                        var b = data[op * 4 + 2] - data[tp * 4 + 2] + 128;
+                        var newR = r < 0 ? 0 : (r > 255 ? 255 : r);
+                        var newG = g < 0 ? 0 : (g > 255 ? 255 : g)
+                        var newB = b < 0 ? 0 : (b > 255 ? 255 : b);
+                        data[op * 4] = newR;
+                        data[op * 4 + 1] = newG;
+                        data[op * 4 + 2] = newB;
+                    }
+                }
+                ctx.putImageData(pixel,0,0);
+            }
+            if (e === 8) {
+                var data = pixel.data;
+                var tmpdata = ctx.createImageData(canvas.width, canvas.height)
+                tmpdata.data.set(data)
+                for (var i = 0; i < canvas.width; i++) {
+                    for (var j = 0; j < canvas.height; j++) {
+                        var op = j * canvas.width + i
+                        var tp = j * canvas.width + (canvas.width - 1 - i)
+                        data[op * 4] = tmpdata.data[tp * 4]
+                        data[op * 4 + 1] = tmpdata.data[tp * 4 + 1]
+                        data[op * 4 + 2] = tmpdata.data[tp * 4 + 2]
+                        data[op * 4 + 3] = tmpdata.data[tp * 4 + 3]
+                    }
+                }
+            ctx.putImageData(pixel,0,0);
+            }
+            if (e === 9) {
+                var data = pixel.data;
+                for (var i =0,j = data.length; i < j; i+=4) {
+                    data[i] = 255 - data[i];
+                    data[i + 1] = 255 - data[i + 1];
+                    data[i + 2] = 255 - data[i + 2];
+                    data[i + 3] = 255;
+                }
+                ctx.putImageData(pixel,0,0);
+            }
+            if (e===10) {
+                var data = pixel.data;
+                // 创建和上面一样的imgData的数据对象，当做模板数据
+                var tmpdata = ctx.createImageData(canvas.width, canvas.height);
+                tmpdata.data.set(data);
+                // 设置区块大小
+                var size = 5;
+                var totalSize = size * size;
+                // 循环出来画布的每一个像素
+                for (var i = 0; i < canvas.width; i += 4) {
+                    for (var j = 0; j < canvas.height; j += 4) {
+                        // 获取到每个像素的index值
+                        var op = j * canvas.width + i;
+                        var totalR = 0, totalG = 0, totalB = 0;
+                        // 找到当前像素为中心的周围一共9个像素
+                        // dx和dy决定了图片的模糊程度
+                        for (var dx = 0; dx < size; dx++) {
+                            for (var dy = 0; dy < size; dy++) {
+                                var x = i + dx;
+                                var y = j + dy;
+                                var p = y * canvas.width + x;
+                                totalR += tmpdata.data[p * 4 + 0];
+                                totalG += tmpdata.data[p * 4 + 1];
+                                totalB += tmpdata.data[p * 4 + 2];
+                            }
+                        }
+                        var newR = totalR / totalSize;
+                        var newG = totalG / totalSize;
+                        var newB = totalB / totalSize;
+                        // 通过遍历赋值
+                        for (var dx = 0; dx < size; dx++) {
+                            for (var dy = 0; dy < size; dy++) {
+                                var x = i + dx;
+                                var y = j + dy;
+                                var p = y * canvas.width + x;
+                                data[op * 4 + 0] = newR;
+                                data[p * 4 + 1] = newG;
+                                data[p * 4 + 2] = newB;
+                            }
+                        }
+                    }
+                }
+                ctx.putImageData(pixel,0,0);
+            }
         }
-
         function convolutionMatrix(output, input, kernel) {
             let w = input.width, h = input.height;
             let iD = input.data, oD = output.data;
